@@ -1,0 +1,305 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  --animation-iteration: infinite;
+  color-scheme: dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: #05060d;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #05060d;
+}
+
+#catalog {
+  scroll-margin-top: 24px;
+}
+
+@keyframes animStar {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-2000px);
+  }
+}
+
+@keyframes animGravity {
+  0% {
+    transform: translateY(-26px);
+    opacity: 0;
+  }
+  30%,
+  80% {
+    letter-spacing: 40px;
+    padding-left: 40px;
+    transform: translateY(0px);
+    opacity: 1;
+  }
+  92%,
+  100% {
+    letter-spacing: 35px;
+    padding-left: 35px;
+    transform: translateY(-4px);
+    opacity: 0;
+  }
+}
+
+@keyframes animDont {
+  0%,
+  15% {
+    transform: translateY(-26px);
+    opacity: 0;
+  }
+  35%,
+  80% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+  92%,
+  100% {
+    transform: translateY(-4px);
+    opacity: 0;
+  }
+}
+
+@keyframes animLet {
+  0%,
+  25% {
+    transform: translateY(-26px);
+    opacity: 0;
+  }
+  45%,
+  80% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+  92%,
+  100% {
+    transform: translateY(-4px);
+    opacity: 0;
+  }
+}
+
+@keyframes animGo {
+  0%,
+  35% {
+    transform: translateY(-26px);
+    opacity: 0;
+  }
+  55%,
+  80% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+  92%,
+  100% {
+    transform: translateY(-4px);
+    opacity: 0;
+  }
+}
+
+.cosmic-parallax-container {
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 82%, rgba(49, 77, 113, 0.48), transparent 18rem),
+    radial-gradient(circle at 50% 100%, rgba(245, 182, 80, 0.23), transparent 24rem),
+    linear-gradient(180deg, #02040a 0%, #070918 44%, #090815 100%);
+  pointer-events: none;
+}
+
+.cosmic-parallax-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 15% 18%, rgba(252, 211, 77, 0.14), transparent 20rem),
+    radial-gradient(circle at 85% 10%, rgba(125, 211, 252, 0.12), transparent 18rem),
+    linear-gradient(180deg, transparent 0%, rgba(5, 6, 13, 0.44) 72%, rgba(5, 6, 13, 0.9) 100%);
+}
+
+.cosmic-parallax-container.cosmic-no-planet {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(125, 211, 252, 0.12), transparent 18rem),
+    radial-gradient(circle at 76% 24%, rgba(252, 211, 77, 0.08), transparent 20rem),
+    radial-gradient(circle at 50% 115%, rgba(15, 23, 42, 0.52), transparent 26rem),
+    linear-gradient(180deg, #02040a 0%, #060713 52%, #05060d 100%);
+}
+
+.cosmic-parallax-container.cosmic-no-planet::after {
+  background:
+    radial-gradient(circle at 24% 20%, rgba(125, 211, 252, 0.1), transparent 22rem),
+    radial-gradient(circle at 82% 12%, rgba(148, 163, 184, 0.09), transparent 20rem),
+    linear-gradient(180deg, transparent 0%, rgba(5, 6, 13, 0.34) 68%, rgba(5, 6, 13, 0.86) 100%);
+}
+
+.cosmic-stars,
+.cosmic-stars-medium,
+.cosmic-stars-large {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.cosmic-stars {
+  width: 1px;
+  height: 1px;
+  animation: animStar 55s linear var(--animation-iteration);
+}
+
+.cosmic-stars::after,
+.cosmic-stars-medium::after,
+.cosmic-stars-large::after {
+  content: "";
+  position: absolute;
+  top: 2000px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.cosmic-stars::after {
+  width: 1px;
+  height: 1px;
+  box-shadow: inherit;
+}
+
+.cosmic-stars-medium {
+  width: 2px;
+  height: 2px;
+  animation: animStar 90s linear var(--animation-iteration);
+}
+
+.cosmic-stars-medium::after {
+  width: 2px;
+  height: 2px;
+  box-shadow: inherit;
+}
+
+.cosmic-stars-large {
+  width: 3px;
+  height: 3px;
+  animation: animStar 140s linear var(--animation-iteration);
+}
+
+.cosmic-stars-large::after {
+  width: 3px;
+  height: 3px;
+  box-shadow: inherit;
+}
+
+#horizon {
+  position: absolute;
+  left: 50%;
+  bottom: -22%;
+  width: min(118vw, 1500px);
+  height: min(45vw, 620px);
+  border-radius: 50% 50% 0 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 235, 180, 0.42), transparent 42%);
+  transform: translateX(-50%);
+  filter: blur(1px);
+}
+
+#horizon .glow {
+  position: absolute;
+  inset: -12% 7% auto;
+  height: 42%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(125, 211, 252, 0.24), transparent 66%);
+  filter: blur(22px);
+}
+
+#earth {
+  position: absolute;
+  left: 50%;
+  bottom: -36%;
+  width: min(132vw, 1720px);
+  height: min(56vw, 760px);
+  border-radius: 50% 50% 0 0;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(247, 218, 154, 0.18), transparent 26%),
+    linear-gradient(180deg, rgba(11, 34, 58, 0.95), rgba(5, 11, 25, 1));
+  transform: translateX(-50%);
+  box-shadow: 0 -80px 120px rgba(56, 189, 248, 0.08);
+}
+
+#title,
+#subtitle {
+  position: absolute;
+  left: 50%;
+  z-index: 1;
+  width: min(86vw, 1100px);
+  transform: translateX(-50%);
+  text-align: center;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+#title {
+  top: 36%;
+  color: rgba(255, 255, 255, 0.08);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(4rem, 12vw, 12rem);
+  font-weight: 700;
+  line-height: 0.82;
+  letter-spacing: 0;
+  text-shadow: 0 0 80px rgba(255, 255, 255, 0.12);
+}
+
+#subtitle {
+  top: calc(36% + clamp(5rem, 13vw, 13rem));
+  color: rgba(255, 255, 255, 0.18);
+  font-size: clamp(0.72rem, 1.3vw, 1rem);
+  font-weight: 800;
+  letter-spacing: 0.28em;
+}
+
+.subtitle-part-1 {
+  animation: animDont 6s ease var(--animation-iteration);
+}
+
+.subtitle-part-2 {
+  animation: animLet 6s ease var(--animation-iteration);
+}
+
+.subtitle-part-3 {
+  animation: animGo 6s ease var(--animation-iteration);
+}
+
+.subtitle-part-4 {
+  animation: animGravity 6s ease var(--animation-iteration);
+}
+
+@media (max-width: 640px) {
+  #title {
+    top: 44%;
+    font-size: clamp(3.25rem, 18vw, 5rem);
+  }
+
+  #subtitle {
+    top: calc(44% + 5.5rem);
+    width: 92vw;
+    font-size: 0.68rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
