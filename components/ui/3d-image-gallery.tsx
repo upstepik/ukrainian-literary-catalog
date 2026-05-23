@@ -293,7 +293,7 @@ function CardModal() {
   ) => {
     event.preventDefault();
     event.stopPropagation();
-    window.location.assign(`/book/${selectedCard.id}`);
+    window.location.hash = `/book/${selectedCard.id}`;
   };
 
   return (
@@ -339,7 +339,7 @@ function CardModal() {
 
             <div className="flex gap-2">
               <a
-                href={`/book/${selectedCard.id}`}
+                href={`#/book/${selectedCard.id}`}
                 onPointerDownCapture={openBookDetail}
                 onClick={openBookDetail}
                 className="inline-flex h-9 flex-1 items-center justify-center rounded-lg text-base font-medium text-black outline-none transition duration-300 ease-out hover:opacity-80 active:scale-[0.97]"
@@ -541,7 +541,7 @@ function GalleryScene() {
       <LuckyButton />
 
       <a
-        href="/"
+        href="#/"
         className="absolute right-4 top-4 z-30 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white shadow-2xl shadow-black/40 backdrop-blur-md transition hover:border-amber-200/60 hover:bg-amber-200 hover:text-slate-950"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -550,4 +550,5 @@ function GalleryScene() {
     </div>
   );
 }
+
 
