@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import React, { Suspense, createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, OrbitControls, Plane, Sphere } from "@react-three/drei";
 import { ArrowLeft, BookOpen, Heart, X } from "lucide-react";
 import { catalogBooks, type CatalogBook } from "@/lib/books";
@@ -29,6 +29,9 @@ type CardContextType = {
   selectedCard: Card | null;
   setSelectedCard: (card: Card | null) => void;
   cards: Card[];
+  highlightedCardId: string | null;
+  isRouletteRunning: boolean;
+  startRoulette: () => Promise<void>;
 };
 
 const CardContext = createContext<CardContextType | undefined>(undefined);
@@ -41,6 +44,8 @@ function useCard() {
 
 function CardProvider({ children }: { children: React.ReactNode }) {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [highlightedCardId, setHighlightedCardId] = useState<string | null>(null);
+  const [isRouletteRunning, setIsRouletteRunning] = useState(false);
 
   const cards: Card[] = catalogBooks.map((book) => ({
     id: book.id,
@@ -51,8 +56,36 @@ function CardProvider({ children }: { children: React.ReactNode }) {
     genre: book.genre,
   }));
 
+  const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+  const startRoulette = async () => {
+    if (isRouletteRunning || cards.length === 0) return;
+
+    setSelectedCard(null);
+    setIsRouletteRunning(true);
+
+    let delay = 28;
+    const steps = 34 + Math.floor(Math.random() * 12);
+    let currentIndex = Math.floor(Math.random() * cards.length);
+
+    for (let i = 0; i < steps; i += 1) {
+      currentIndex = (currentIndex + 1 + Math.floor(Math.random() * 2)) % cards.length;
+      setHighlightedCardId(cards[currentIndex].id);
+      await wait(delay);
+      delay = Math.min(delay * 1.11, 185);
+    }
+
+    const winner = cards[currentIndex];
+    setHighlightedCardId(winner.id);
+    await wait(360);
+    setIsRouletteRunning(false);
+    setSelectedCard(winner);
+  };
+
   return (
-    <CardContext.Provider value={{ selectedCard, setSelectedCard, cards }}>
+    <CardContext.Provider
+      value={{ selectedCard, setSelectedCard, cards, highlightedCardId, isRouletteRunning, startRoulette }}
+    >
       {children}
     </CardContext.Provider>
   );
@@ -137,7 +170,8 @@ function FloatingCard({
   const meshRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
-  const { setSelectedCard } = useCard();
+  const { setSelectedCard, highlightedCardId, isRouletteRunning } = useCard();
+  const isHighlighted = highlightedCardId === card.id;
 
   useFrame(({ camera }) => {
     if (groupRef.current) {
@@ -173,14 +207,22 @@ function FloatingCard({
         <div
           className="w-40 h-52 rounded-lg overflow-hidden shadow-2xl bg-[#1F2121] p-3 select-none"
           style={{
-            boxShadow: hovered
-              ? "0 25px 50px rgba(49, 184, 198, 0.5), 0 0 30px rgba(49, 184, 198, 0.3)"
-              : "0 15px 30px rgba(0, 0, 0, 0.6)",
-            border: hovered ? "2px solid rgba(49, 184, 198, 0.5)" : "1px solid rgba(255, 255, 255, 0.1)",
+            boxShadow: isHighlighted
+              ? "0 32px 70px rgba(255, 211, 118, 0.45), 0 0 45px rgba(255, 211, 118, 0.45)"
+              : hovered
+                ? "0 25px 50px rgba(49, 184, 198, 0.52), 0 0 30px rgba(49, 184, 198, 0.34)"
+                : "0 15px 30px rgba(0, 0, 0, 0.6)",
+            border: isHighlighted
+              ? "2px solid rgba(255, 211, 118, 0.75)"
+              : hovered
+                ? "2px solid rgba(56, 189, 248, 0.72)"
+                : "1px solid rgba(56, 189, 248, 0.38)",
           }}
           onMouseEnter={handlePointerOver}
           onMouseLeave={handlePointerOut}
-          onClick={() => setSelectedCard(card)}
+          onClick={() => {
+            if (!isRouletteRunning) setSelectedCard(card);
+          }}
         >
           <img
             src={card.imageUrl || "/placeholder.svg"}
@@ -305,7 +347,7 @@ function CardModal() {
               >
                 <div className="flex items-center gap-1.5">
                   <BookOpen className="h-4 w-4" strokeWidth={1.8} />
-                  <span>Читати детальніше</span>
+                  <span>Читати далі</span>
                 </div>
               </a>
               <button
@@ -385,6 +427,37 @@ function CardGalaxy() {
   );
 }
 
+function RouletteCameraRig({ active }: { active: boolean }) {
+  const { camera } = useThree();
+  const tRef = useRef(0);
+  const phaseRef = useRef({
+    x: Math.random() * Math.PI * 2,
+    y: Math.random() * Math.PI * 2,
+    z: Math.random() * Math.PI * 2,
+  });
+  const targetRef = useRef(new THREE.Vector3(0, 0, 15));
+
+  useFrame((_, delta) => {
+    if (!active) return;
+
+    tRef.current += delta * 2.9;
+    const t = tRef.current;
+    const phase = phaseRef.current;
+    const radius = 16 + Math.sin(t * 0.72 + phase.x) * 2.4;
+
+    targetRef.current.set(
+      Math.cos(t * 1.45 + phase.x) * radius * 0.92 + Math.sin(t * 2.05 + phase.y) * 1.7,
+      Math.sin(t * 1.12 + phase.y) * 7.2 + Math.cos(t * 1.7 + phase.z) * 1.8,
+      Math.sin(t * 1.58 + phase.z) * radius * 0.92 + Math.cos(t * 2.18 + phase.x) * 1.4,
+    );
+
+    camera.position.lerp(targetRef.current, 0.16);
+    camera.lookAt(0, 0, 0);
+  });
+
+  return null;
+}
+
 /* =========================
    Page/Component Export
    ========================= */
@@ -392,59 +465,89 @@ function CardGalaxy() {
 export default function StellarCardGallerySingle() {
   return (
     <CardProvider>
-      <div className="w-full h-screen relative overflow-hidden bg-[#05060d]">
-        <StarfieldBackground />
-        <div
-          className="absolute inset-0 z-[5] pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(circle at 50% 82%, rgba(49, 77, 113, 0.48), transparent 18rem), radial-gradient(circle at 50% 100%, rgba(245, 182, 80, 0.18), transparent 24rem), radial-gradient(circle at 18% 16%, rgba(125, 211, 252, 0.08), transparent 18rem), linear-gradient(180deg, rgba(2,4,10,0) 0%, rgba(7,9,24,0.35) 44%, rgba(5,6,13,0.88) 100%)",
-          }}
-        />
+      <GalleryScene />
+    </CardProvider>
+  );
+}
 
-        <Canvas
-          camera={{ position: [0, 0, 15], fov: 60 }}
-          className="absolute inset-0 z-10"
-          style={{ position: "absolute", inset: 0, zIndex: 10 }}
-          onCreated={({ gl }) => {
-            gl.domElement.style.pointerEvents = "auto";
-          }}
-        >
+function LuckyButton() {
+  const { startRoulette, isRouletteRunning } = useCard();
+
+  return (
+    <button
+      type="button"
+      onClick={() => void startRoulette()}
+      disabled={isRouletteRunning}
+      className="absolute left-4 bottom-4 z-30 inline-flex items-center gap-2 rounded-full border border-amber-200/40 bg-amber-200/20 px-4 py-2.5 text-sm font-semibold text-amber-100 shadow-2xl shadow-black/40 backdrop-blur-md transition hover:border-amber-100 hover:bg-amber-200 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-70"
+    >
+      <span className="inline-block h-2 w-2 rounded-full bg-amber-200" />
+      {isRouletteRunning ? "Крутиться..." : "Рандомна книга"}
+    </button>
+  );
+}
+
+function GalleryScene() {
+  const { isRouletteRunning } = useCard();
+
+  return (
+    <div className="w-full h-screen relative overflow-hidden bg-[#05060d]">
+      <StarfieldBackground />
+      <div
+        className="absolute inset-0 z-[5] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 82%, rgba(49, 77, 113, 0.48), transparent 18rem), radial-gradient(circle at 50% 100%, rgba(245, 182, 80, 0.18), transparent 24rem), radial-gradient(circle at 18% 16%, rgba(125, 211, 252, 0.08), transparent 18rem), linear-gradient(180deg, rgba(2,4,10,0) 0%, rgba(7,9,24,0.35) 44%, rgba(5,6,13,0.88) 100%)",
+        }}
+      />
+
+      <Canvas
+        camera={{ position: [0, 0, 15], fov: 60 }}
+        className="absolute inset-0 z-10"
+        style={{ position: "absolute", inset: 0, zIndex: 10 }}
+        onCreated={({ gl }) => {
+          gl.domElement.style.pointerEvents = "auto";
+        }}
+      >
           <Suspense fallback={null}>
             <ambientLight intensity={0.4} />
             <pointLight position={[10, 10, 10]} intensity={0.6} />
             <pointLight position={[-10, -10, -10]} intensity={0.3} />
             <CardGalaxy />
+            <RouletteCameraRig active={isRouletteRunning} />
             <OrbitControls
+              enabled={!isRouletteRunning}
               enablePan
-              enableZoom
+              enableZoom={!isRouletteRunning}
               enableRotate
-              minDistance={5}
-              maxDistance={40}
-              autoRotate={false}
-              rotateSpeed={0.5}
-              zoomSpeed={1.2}
-              panSpeed={0.8}
-              target={[0, 0, 0]}
-            />
-          </Suspense>
-        </Canvas>
+            minDistance={5}
+            maxDistance={40}
+            autoRotate={isRouletteRunning}
+            autoRotateSpeed={isRouletteRunning ? 9.5 : 0}
+            rotateSpeed={isRouletteRunning ? 0.2 : 0.5}
+            zoomSpeed={1.2}
+            panSpeed={0.8}
+            target={[0, 0, 0]}
+          />
+        </Suspense>
+      </Canvas>
 
-        <CardModal />
+      <CardModal />
 
-        <div className="absolute top-4 left-4 z-20 text-white pointer-events-none">
-          <h1 className="text-2xl font-bold mb-2">Каталог обкладинок</h1>
-          <p className="text-sm opacity-70">Перетягуйте для огляду • Прокручуйте для масштабу • Натискайте на обкладинки, щоб відкрити</p>
-        </div>
-
-        <a
-          href="/"
-          className="absolute right-4 top-4 z-30 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white shadow-2xl shadow-black/40 backdrop-blur-md transition hover:border-amber-200/60 hover:bg-amber-200 hover:text-slate-950"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Повернутися на головну
-        </a>
+      <div className="absolute top-4 left-4 z-20 text-white pointer-events-none">
+        <h1 className="text-2xl font-bold mb-2">Каталог обкладинок</h1>
+        <p className="text-sm opacity-70">Перетягуйте для огляду • Прокручуйте для масштабу • Натискайте на обкладинки, щоб відкрити</p>
       </div>
-    </CardProvider>
+
+      <LuckyButton />
+
+      <a
+        href="/"
+        className="absolute right-4 top-4 z-30 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white shadow-2xl shadow-black/40 backdrop-blur-md transition hover:border-amber-200/60 hover:bg-amber-200 hover:text-slate-950"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Повернутися на головну
+      </a>
+    </div>
   );
 }
+
